@@ -11,7 +11,7 @@ export interface Conversation {
   generatedPrompt: string
   response: string
   rating?: 'up' | 'down'
-  language: 'en' | 'de'
+  language: 'en' | 'de' | 'pt'
   tokensUsed?: number
 }
 
@@ -25,7 +25,7 @@ export interface PromptTemplate {
 }
 
 interface JarvisStore {
-  language: 'en' | 'de'
+  language: 'en' | 'de' | 'pt'
   isDarkMode: boolean
   conversations: Conversation[]
   promptTemplates: PromptTemplate[]
@@ -35,7 +35,7 @@ interface JarvisStore {
   isListening: boolean
   isProcessing: boolean
 
-  setLanguage: (lang: 'en' | 'de') => void
+  setLanguage: (lang: 'en' | 'de' | 'pt') => void
   setDarkMode: (dark: boolean) => void
   setApiKey: (key: string) => void
   setVoiceEnabled: (enabled: boolean) => void
@@ -52,7 +52,7 @@ interface JarvisStore {
 export const useJarvisStore = create<JarvisStore>()(
   persist(
     (set, get) => ({
-      language: 'en',
+      language: 'en' as 'en' | 'de' | 'pt',
       isDarkMode: false,
       conversations: [],
       promptTemplates: [],

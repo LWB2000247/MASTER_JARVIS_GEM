@@ -26,7 +26,6 @@ export function createVoiceService(): VoiceService {
       recognitionInstance = new SpeechRecognition()
       recognitionInstance.continuous = false
       recognitionInstance.interimResults = true
-      recognitionInstance.language = language === 'de' ? 'de-DE' : 'en-US'
 
       recognitionInstance.onstart = () => {
         console.log('Listening started...')
@@ -64,6 +63,13 @@ export function createVoiceService(): VoiceService {
         }
       }
 
+      const languageMap: Record<string, string> = {
+        'de': 'de-DE',
+        'en': 'en-US',
+        'pt': 'pt-PT',
+      }
+      recognitionInstance.language = languageMap[language] || 'en-US'
+
       recognitionInstance.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error)
       }
@@ -88,7 +94,12 @@ export function createVoiceService(): VoiceService {
       }
 
       const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = language === 'de' ? 'de-DE' : 'en-US'
+      const languageMap: Record<string, string> = {
+        'de': 'de-DE',
+        'en': 'en-US',
+        'pt': 'pt-PT',
+      }
+      utterance.lang = languageMap[language] || 'en-US'
       utterance.rate = speed
       utterance.pitch = 1
       utterance.volume = 1

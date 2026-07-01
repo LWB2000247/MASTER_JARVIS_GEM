@@ -44,10 +44,10 @@ export function SettingsPanel() {
           {/* Language */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('language')}</label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => setLanguage('en')}
-                className={`flex-1 py-2 rounded font-medium transition ${
+                className={`py-2 rounded font-medium transition text-sm ${
                   language === 'en'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-blue-500 hover:text-white'
@@ -57,13 +57,23 @@ export function SettingsPanel() {
               </button>
               <button
                 onClick={() => setLanguage('de')}
-                className={`flex-1 py-2 rounded font-medium transition ${
+                className={`py-2 rounded font-medium transition text-sm ${
                   language === 'de'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-blue-500 hover:text-white'
                 }`}
               >
                 {t('german')}
+              </button>
+              <button
+                onClick={() => setLanguage('pt')}
+                className={`py-2 rounded font-medium transition text-sm ${
+                  language === 'pt'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-blue-500 hover:text-white'
+                }`}
+              >
+                {t('portuguese')}
               </button>
             </div>
           </div>

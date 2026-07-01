@@ -45,7 +45,7 @@ export function ConversationTimeline() {
               </div>
             </div>
             <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-3 py-1 rounded-full">
-              {conv.language === 'de' ? 'Deutsch' : 'English'}
+              {conv.language === 'de' ? 'Deutsch' : conv.language === 'pt' ? 'Português' : 'English'}
             </span>
           </div>
 

@@ -5,7 +5,7 @@ const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/
 export interface GenerationRequest {
   prompt: string
   context?: string
-  language: 'en' | 'de'
+  language: 'en' | 'de' | 'pt'
 }
 
 export interface GenerationResponse {
@@ -63,16 +63,23 @@ export async function generateOptimizedPrompt(
   apiKey: string,
   userTask: string,
   context: string,
-  language: 'en' | 'de',
+  language: 'en' | 'de' | 'pt',
 ): Promise<GenerationResponse> {
-  const systemPrompt =
-    language === 'de'
-      ? `Du bist Master Jarvis, ein intelligenter Prompt-Ingenieur.
+  let systemPrompt = ''
+
+  if (language === 'de') {
+    systemPrompt = `Du bist Master Jarvis, ein intelligenter Prompt-Ingenieur.
 Analysiere die Benutzeraufgabe und generiere einen optimierten Prompt für Claude oder Gemini.
 Antworte NUR mit dem optimierten Prompt, keine Erklärungen.`
-      : `You are Master Jarvis, an intelligent prompt engineer.
+  } else if (language === 'pt') {
+    systemPrompt = `Você é Master Jarvis, um engenheiro de prompts inteligente.
+Analise a tarefa do usuário e gere um prompt otimizado para Claude ou Gemini.
+Responda APENAS com o prompt otimizado, sem explicações.`
+  } else {
+    systemPrompt = `You are Master Jarvis, an intelligent prompt engineer.
 Analyze the user task and generate an optimized prompt for Claude or Gemini.
 Respond with ONLY the optimized prompt, no explanations.`
+  }
 
   const fullPrompt = `${systemPrompt}\n\nUser Task: ${userTask}\nContext: ${context}`
 
@@ -88,12 +95,17 @@ Respond with ONLY the optimized prompt, no explanations.`
 export async function processUserTask(
   apiKey: string,
   task: string,
-  language: 'en' | 'de',
+  language: 'en' | 'de' | 'pt',
 ): Promise<GenerationResponse> {
-  const systemPrompt =
-    language === 'de'
-      ? 'Du bist Master Jarvis, ein hilfreicher KI-Assistent. Beantworte die Frage präzise und hilfreich.'
-      : 'You are Master Jarvis, a helpful AI assistant. Answer the question precisely and helpfully.'
+  let systemPrompt = ''
+
+  if (language === 'de') {
+    systemPrompt = 'Du bist Master Jarvis, ein hilfreicher KI-Assistent. Beantworte die Frage präzise und hilfreich.'
+  } else if (language === 'pt') {
+    systemPrompt = 'Você é Master Jarvis, um assistente de IA útil. Responda à pergunta com precisão e utilidade.'
+  } else {
+    systemPrompt = 'You are Master Jarvis, a helpful AI assistant. Answer the question precisely and helpfully.'
+  }
 
   const fullPrompt = `${systemPrompt}\n\n${task}`
 
