@@ -1,9 +1,11 @@
 export interface ProcessedFile {
   name: string
   type: 'pdf' | 'image' | 'video' | 'text'
-  content: string
+  content: string // base64 or text content
+  textContent?: string // extracted text for PDFs
   preview?: string
   size: number
+  mimeType: string
 }
 
 export async function processFile(file: File): Promise<ProcessedFile> {
@@ -35,12 +37,31 @@ async function processPdf(file: File): Promise<ProcessedFile> {
   const arrayBuffer = await file.arrayBuffer()
   const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
 
+  // Try to extract text (basic implementation)
+  let textContent = ''
+  try {
+    const pdfModule = await (window as any).pdfjsLib?.getDocument?.({ data: arrayBuffer })
+    if (pdfModule) {
+      const pdf = pdfModule
+      const maxPages = Math.min(pdf.numPages, 3) // Limit to first 3 pages
+      for (let i = 1; i <= maxPages; i++) {
+        const page = await pdf.getPage(i)
+        const content = await page.getTextContent()
+        textContent += content.items.map((item: any) => item.str).join(' ') + '\n'
+      }
+    }
+  } catch {
+    // PDF.js not available, skip text extraction
+  }
+
   return {
     name: file.name,
     type: 'pdf',
-    content: `[PDF Content - Base64 encoded]\n${base64.substring(0, 500)}...`,
+    content: base64,
+    textContent: textContent || `[PDF] ${file.name}`,
     size: file.size,
-    preview: `PDF: ${file.name} (${formatFileSize(file.size)})`,
+    mimeType: 'application/pdf',
+    preview: `📄 ${file.name} (${formatFileSize(file.size)})`,
   }
 }
 
@@ -49,14 +70,31 @@ async function processImage(file: File): Promise<ProcessedFile> {
     const reader = new FileReader()
 
     reader.onload = (e) => {
-      const dataUrl = e.target?.result as string
-      resolve({
-        name: file.name,
-        type: 'image',
-        content: dataUrl,
-        preview: dataUrl,
-        size: file.size,
-      })
+      const base64 = (e.target?.result as string).split(',')[1]
+
+      // Create preview
+      const img = new Image()
+      img.src = e.target?.result as string
+      img.onload = () => {
+        resolve({
+          name: file.name,
+          type: 'image',
+          content: base64,
+          size: file.size,
+          mimeType: file.type || 'image/jpeg',
+          preview: e.target?.result as string,
+        })
+      }
+      img.onerror = () => {
+        resolve({
+          name: file.name,
+          type: 'image',
+          content: base64,
+          size: file.size,
+          mimeType: file.type || 'image/jpeg',
+          preview: `🖼️ ${file.name}`,
+        })
+      }
     }
 
     reader.onerror = reject
@@ -69,14 +107,51 @@ async function processVideo(file: File): Promise<ProcessedFile> {
     const reader = new FileReader()
 
     reader.onload = (e) => {
-      const dataUrl = e.target?.result as string
-      resolve({
-        name: file.name,
-        type: 'video',
-        content: dataUrl,
-        preview: `Video: ${file.name}`,
-        size: file.size,
-      })
+      const base64 = (e.target?.result as string).split(',')[1]
+
+      // Extract first frame as preview
+      const video = document.createElement('video')
+      video.src = e.target?.result as string
+      video.onloadedmetadata = () => {
+        video.currentTime = 0
+        video.onseeked = () => {
+          const canvas = document.createElement('canvas')
+          canvas.width = video.videoWidth
+          canvas.height = video.videoHeight
+          const ctx = canvas.getContext('2d')
+          if (ctx) {
+            ctx.drawImage(video, 0, 0)
+            const preview = canvas.toDataURL()
+            resolve({
+              name: file.name,
+              type: 'video',
+              content: base64,
+              size: file.size,
+              mimeType: file.type || 'video/mp4',
+              preview,
+            })
+          } else {
+            resolve({
+              name: file.name,
+              type: 'video',
+              content: base64,
+              size: file.size,
+              mimeType: file.type || 'video/mp4',
+              preview: `🎥 ${file.name}`,
+            })
+          }
+        }
+      }
+      video.onerror = () => {
+        resolve({
+          name: file.name,
+          type: 'video',
+          content: base64,
+          size: file.size,
+          mimeType: file.type || 'video/mp4',
+          preview: `🎥 ${file.name}`,
+        })
+      }
     }
 
     reader.onerror = reject
@@ -91,6 +166,7 @@ async function processTextFile(file: File): Promise<ProcessedFile> {
     type: 'text',
     content: text,
     size: file.size,
+    mimeType: file.type || 'text/plain',
     preview: text.substring(0, 200),
   }
 }

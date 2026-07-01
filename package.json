@@ -18,8 +18,7 @@
     "lucide-react": "^0.294.0",
     "i18next": "^23.7.0",
     "react-i18next": "^13.5.0",
-    "pdf-parse": "^1.1.1",
-    "sharp": "^0.32.0"
+    "pdfjs-dist": "^4.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

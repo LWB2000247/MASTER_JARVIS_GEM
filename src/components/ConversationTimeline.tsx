@@ -1,10 +1,16 @@
 import { useTranslation } from 'react-i18next'
-import { ThumbsUp, ThumbsDown, FileText, Image, Video } from 'lucide-react'
-import { useJarvisStore } from '../store/jarvisStore'
+import { ThumbsUp, ThumbsDown, FileText, Image, Video, Download } from 'lucide-react'
+import { useJarvisStore, Conversation } from '../store/jarvisStore'
 
-export function ConversationTimeline() {
+interface ConversationTimelineProps {
+  searchResults?: Conversation[]
+}
+
+export function ConversationTimeline({ searchResults }: ConversationTimelineProps) {
   const { t } = useTranslation()
   const { conversations, updateConversationRating } = useJarvisStore()
+
+  const displayConversations = searchResults && searchResults.length > 0 ? searchResults : conversations
 
   const getInputTypeIcon = (type: string, fileType?: string) => {
     if (type === 'voice') return '🎤'
@@ -16,19 +22,80 @@ export function ConversationTimeline() {
     return '✏️'
   }
 
-  if (conversations.length === 0) {
+  const exportConversationsAsJSON = () => {
+    const dataStr = JSON.stringify(displayConversations, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `conversations-${new Date().toISOString().split('T')[0]}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportConversationsAsMarkdown = () => {
+    let markdown = '# Master Jarvis Conversations Export\n\n'
+    markdown += `Exported on: ${new Date().toLocaleString()}\n\n`
+
+    displayConversations.forEach((conv, index) => {
+      markdown += `## Conversation ${index + 1}\n\n`
+      markdown += `**Date:** ${new Date(conv.timestamp).toLocaleString()}\n\n`
+      markdown += `**Language:** ${conv.language.toUpperCase()}\n\n`
+      markdown += `**Input Type:** ${conv.userInputType}\n\n`
+      if (conv.fileName) markdown += `**File:** ${conv.fileName}\n\n`
+
+      markdown += `### User Input\n${conv.userInput}\n\n`
+      markdown += `### Generated Prompt\n${conv.generatedPrompt}\n\n`
+      markdown += `### Response\n${conv.response}\n\n`
+
+      if (conv.tokensUsed) markdown += `**Tokens Used:** ${conv.tokensUsed}\n\n`
+      if (conv.rating) markdown += `**Rating:** ${conv.rating}\n\n`
+
+      markdown += '---\n\n'
+    })
+
+    const dataBlob = new Blob([markdown], { type: 'text/markdown' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `conversations-${new Date().toISOString().split('T')[0]}.md`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  if (displayConversations.length === 0) {
     return (
       <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-8 text-center">
-        <p className="text-gray-500 dark:text-gray-400">{t('no_conversations')}</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          {searchResults && searchResults.length === 0 ? 'No search results found' : t('no_conversations')}
+        </p>
       </div>
     )
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('conversation_history')}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('conversation_history')}</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={exportConversationsAsMarkdown}
+            title="Export as Markdown"
+            className="p-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 rounded-lg transition"
+          >
+            <Download size={18} />
+          </button>
+          <button
+            onClick={exportConversationsAsJSON}
+            title="Export as JSON"
+            className="p-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 rounded-lg transition"
+          >
+            <Download size={18} />
+          </button>
+        </div>
+      </div>
 
-      {conversations.map((conv, index) => (
+      {displayConversations.map((conv, index) => (
         <div
           key={conv.id}
           className="bg-white dark:bg-slate-900 rounded-lg shadow-md overflow-hidden border-l-4 border-blue-500 dark:border-blue-400"
@@ -70,7 +137,7 @@ export function ConversationTimeline() {
             {/* Response */}
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('response')}:</h4>
-              <p className="text-gray-700 dark:text-gray-300 bg-blue-50 dark:bg-slate-800 p-3 rounded">
+              <p className="text-gray-700 dark:text-gray-300 bg-blue-50 dark:bg-slate-800 p-3 rounded max-h-48 overflow-y-auto">
                 {conv.response}
               </p>
             </div>
@@ -87,10 +154,10 @@ export function ConversationTimeline() {
 
           {/* Footer - Rating */}
           <div className="bg-gray-50 dark:bg-slate-800 px-6 py-3 flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">#{conversations.length - index}</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">#{displayConversations.length - index}</span>
             <div className="flex gap-2">
               <button
-                onClick={() => updateConversationRating(conv.id, 'up')}
+                onClick={() => updateConversationRating(String(conv.id), 'up')}
                 className={`p-2 rounded transition ${
                   conv.rating === 'up'
                     ? 'bg-green-500 text-white'
@@ -101,7 +168,7 @@ export function ConversationTimeline() {
                 <ThumbsUp size={18} />
               </button>
               <button
-                onClick={() => updateConversationRating(conv.id, 'down')}
+                onClick={() => updateConversationRating(String(conv.id), 'down')}
                 className={`p-2 rounded transition ${
                   conv.rating === 'down'
                     ? 'bg-red-500 text-white'

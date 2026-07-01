@@ -41,5 +41,13 @@
   "english": "English",
   "german": "Deutsch",
   "portuguese": "Português",
-  "type_message": "Type your message here..."
+  "type_message": "Type your message here...",
+  "export_json": "Export as JSON",
+  "export_markdown": "Export as Markdown",
+  "search_conversations": "Search conversations...",
+  "generate_prompt": "Generate Prompt",
+  "edit_prompt": "Edit Prompt",
+  "submit_prompt": "Submit",
+  "no_search_results": "No search results found",
+  "language_filter": "Language filter"
 }
