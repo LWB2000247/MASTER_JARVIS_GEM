@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "version": 1,
+    "created": null,
+    "last_updated": null,
+    "knowledge_level": "zero"
+  },
+  "facts": {
+    "leon": {},
+    "ac_management": {},
+    "aura_tavira": {},
+    "general": {}
+  }
+}

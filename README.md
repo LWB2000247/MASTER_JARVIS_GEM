@@ -217,6 +217,71 @@ npm run lint
 - [ ] Multi-model support (Claude, OpenAI)
 - [ ] Cloud sync with authentication
 
+## Master Jarvis Orchestrator (backend)
+
+Alongside the browser frontend above, `/core`, `/memory`, `/vault`, `/api`
+and `/deployment` implement a local-first, BYOK orchestrator: it starts
+with **zero knowledge** and builds `memory/brain.json` purely from
+conversation (facts about Leon, AC Management, Aura Tavira).
+
+```
+core/
+├── orchestrator.js     # main logic + CLI REPL entry point
+├── router.js            # language detection (EN/DE/PT-PT) + department routing
+├── security.js          # AES-256-GCM vault encryption + manual handshake gate
+├── dispatcher.js         # natural language -> n8n webhook JSON payloads
+├── memory_manager.js     # CRUD for memory/brain.json
+└── verifier.js           # cross-references 2 LLMs, produces a Discrepancy Report
+memory/
+├── brain.example.json   # zero-knowledge template (memory/brain.json is gitignored)
+└── config.json          # non-secret BYOK/provider wiring
+vault/                    # encrypted-at-rest business data (gitignored)
+api/server.js             # Express API for future mobile/laptop access
+deployment/                # Dockerfile + docker-compose.yml
+```
+
+### Setup
+
+```bash
+cp .env.example .env
+# fill in OPENAI_API_KEY / ANTHROPIC_API_KEY / GEMINI_API_KEY, N8N_WEBHOOK_URL,
+# and generate VAULT_KEY with:
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+npm run jarvis    # local CLI REPL (talks to you in EN/DE/PT-PT)
+npm run server    # Express API on http://localhost:4000
+```
+
+Teach it a fact from the REPL or `POST /api/message` with a
+`"remember: <fact>"` message — it gets classified by department (language
+auto-detected) and written to `memory/brain.json`.
+
+### Cross-reference / Discrepancy Report
+
+`POST /api/verify { "query": "..." }` (or `core/verifier.js` -> `crossReference`)
+queries two configured LLMs with the same prompt and returns an agreement
+score plus each raw response, so factual discrepancies surface directly.
+
+### Sovereignty and the vault handshake
+
+- `/vault` and the live `memory/brain.json` never leave the machine and are
+  gitignored — only the zero-knowledge template and non-secret config ship
+  in the repo.
+- Any code path sending vault-derived data off-machine (for example
+  `dispatcher.js` posting to n8n) must call `security.js` -> `requestHandshake`
+  and get a separate, explicit confirmation (`confirmHandshake`) before the
+  send is allowed to proceed.
+
+### Docker (office deployment)
+
+```bash
+cd deployment
+docker compose up -d --build
+```
+
+`memory/` and `vault/` are bind-mounted from the host so data persists
+across container rebuilds.
+
 ## License
 MIT
 

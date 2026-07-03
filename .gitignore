@@ -13,3 +13,11 @@ dist/
 .cache/
 coverage/
 build/
+
+# Master Jarvis local sovereignty: personal facts and business data never
+# get committed. The zero-knowledge starting point is memory/brain.example.json;
+# the live memory/brain.json is generated locally on first run and stays local.
+/memory/brain.json
+/vault/*
+!/vault/.gitkeep
+!/vault/README.md

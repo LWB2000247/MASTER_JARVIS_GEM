@@ -1,0 +1,14 @@
+services:
+  jarvis:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: master-jarvis
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - ../.env
+    volumes:
+      - ../memory:/app/memory
+      - ../vault:/app/vault

@@ -1,0 +1,26 @@
+{
+  "byok": {
+    "note": "Actual API keys live only in the local .env file (never committed). This file just records which provider slots are wired up.",
+    "providers": {
+      "openai": { "env_var": "OPENAI_API_KEY", "used_for": ["cross_reference"] },
+      "anthropic": { "env_var": "ANTHROPIC_API_KEY", "used_for": ["cross_reference"] },
+      "gemini": { "env_var": "GEMINI_API_KEY", "used_for": ["cross_reference", "frontend_chat"] }
+    },
+    "cross_reference_pair": {
+      "llm_a": "openai",
+      "llm_b": "anthropic"
+    }
+  },
+  "n8n": {
+    "webhook_env_var": "N8N_WEBHOOK_URL"
+  },
+  "orchestrator": {
+    "default_language": "auto",
+    "supported_languages": ["en", "de", "pt-PT"],
+    "departments": ["leon", "ac_management", "aura_tavira", "general"]
+  },
+  "security": {
+    "vault_handshake_required": true,
+    "vault_key_env_var": "VAULT_KEY"
+  }
+}
